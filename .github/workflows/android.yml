@@ -51,9 +51,12 @@ jobs:
             "$KEYSTORE_PASSWORD" "$KEYSTORE_PASSWORD" > keystore.properties
 
       # debug variant so it matches build-apk.ps1; without RUSTFLAGS the .so ships 128 MB of symbols
-      - run: pnpm tauri android build --apk --debug --target aarch64
+      - name: build apk
+        run: |
+          export NDK_HOME="${ANDROID_NDK_LATEST_HOME:-$ANDROID_NDK_ROOT}"
+          echo "NDK_HOME=$NDK_HOME"
+          pnpm tauri android build --apk --debug --target aarch64
         env:
-          NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
           RUSTFLAGS: "-C strip=symbols"
 
       - name: collect apk and update manifest
