@@ -1,0 +1,7 @@
+{
+	"identifier": "mobile",
+	"description": "Capability for the single-window mobile app",
+	"windows": ["main"],
+	"platforms": ["android", "iOS"],
+	"permissions": ["core:default", "dialog:default", "shell:allow-open", "store:default"]
+}

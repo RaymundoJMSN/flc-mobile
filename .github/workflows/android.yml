@@ -1,0 +1,88 @@
+name: "android"
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install
+
+      # same signing key as local builds, otherwise Android refuses to install the update
+      - name: restore signing keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::warning::KEYSTORE_BASE64 not set — APK will be signed with a throwaway debug key and cannot update installed apps"
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > flc.keystore
+          printf 'storeFile=flc.keystore\nstorePassword=%s\nkeyAlias=flc\nkeyPassword=%s\n' \
+            "$KEYSTORE_PASSWORD" "$KEYSTORE_PASSWORD" > keystore.properties
+
+      # debug variant so it matches build-apk.ps1; without RUSTFLAGS the .so ships 128 MB of symbols
+      - run: pnpm tauri android build --apk --debug --target aarch64
+        env:
+          NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
+          RUSTFLAGS: "-C strip=symbols"
+
+      - name: collect apk and update manifest
+        env:
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          VERSION=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          # same formula Tauri uses for versionCode: major*1000000 + minor*1000 + patch
+          CODE=$(node -p "const v=require('./src-tauri/tauri.conf.json').version.split('.').map(Number);v[0]*1000000+v[1]*1000+v[2]")
+          mkdir -p dist
+          cp "$(find src-tauri/gen/android -name '*.apk' | head -1)" "dist/flc-$VERSION.apk"
+          node -e '
+            const [tag, repo, version, code] = process.argv.slice(1);
+            require("fs").writeFileSync("dist/android-latest.json", JSON.stringify({
+              versionCode: Number(code),
+              versionName: version,
+              url: `https://github.com/${repo}/releases/download/${tag}/flc-${version}.apk`,
+              notes: ""
+            }, null, 2));
+          ' "$TAG" "$REPO" "$VERSION" "$CODE"
+          cat dist/android-latest.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: flc-apk
+          path: dist/*
+
+      - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: dist/*

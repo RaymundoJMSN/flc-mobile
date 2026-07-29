@@ -1,6 +1,9 @@
-use tauri::webview::{NewWindowResponse, WebviewWindowBuilder};
 use tauri::{AppHandle, Manager};
 
+#[cfg(desktop)]
+use tauri::webview::{NewWindowResponse, WebviewWindowBuilder};
+
+#[cfg(desktop)]
 #[tauri::command]
 async fn open_webview(
     app: AppHandle,
@@ -47,7 +50,21 @@ async fn open_webview(
     Ok(())
 }
 
-#[cfg(not(mobile))]
+// ponytail: Android/iOS have a single webview, so joining a server just navigates
+// it to Foundry. Back button returns to the server list (see MainActivity.kt).
+// Extra args sent by the frontend (id/title/incognito) are ignored here.
+#[cfg(mobile)]
+#[tauri::command]
+async fn open_webview(app: AppHandle, url: String) -> Result<(), String> {
+    let parsed: tauri::Url = url.parse().map_err(|e| format!("Invalid URL: {}", e))?;
+
+    app.get_webview_window("main")
+        .ok_or_else(|| "Main window not found".to_string())?
+        .navigate(parsed)
+        .map_err(|e| format!("Failed to navigate: {}", e))
+}
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     #[cfg(target_os = "windows")]
     unsafe {
@@ -71,12 +88,17 @@ pub fn run() {
         }
     }
 
-    tauri::Builder::default()
+    let builder = tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_shell::init());
+
+    #[cfg(desktop)]
+    let builder = builder
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build());
+
+    builder
         .invoke_handler(tauri::generate_handler![open_webview])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

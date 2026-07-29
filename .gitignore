@@ -10,3 +10,7 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 /.tauri
 /src-tauri/target
+
+# app signing key — losing it means no more updates for installed APKs, back it up
+*.keystore
+keystore.properties

@@ -134,8 +134,17 @@
 		@apply border-border;
 	}
 
+	html {
+		/* no rubber-band scroll / blue tap flash on Android */
+		overscroll-behavior: none;
+		-webkit-tap-highlight-color: transparent;
+	}
+
 	body {
 		@apply bg-background text-foreground;
+		/* immersive mode draws under the notch / system bars */
+		padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+			env(safe-area-inset-left);
 	}
 
 	button:not([disabled]),

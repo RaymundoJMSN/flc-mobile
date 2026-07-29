@@ -1,24 +1,10 @@
 <script lang="ts">
 	import ServerGrid from "$components/ServerGrid.svelte";
-	import NodeserverGrid from "$components/NodeserverGrid.svelte";
-	import NodeserverLauncher from "$components/NodeserverLauncher.svelte";
-	import * as Tabs from "$lib/components/ui/tabs/index.js";
 	import ServerAdd from "$components/ServerAdd.svelte";
-	import NodeserverAdd from "$components/NodeserverAdd.svelte";
 </script>
 
-<main class="container mx-auto grid max-w-3xl gap-2 py-2">
-	<Tabs.Content
-		value="join"
-		class="space-y-4">
-		<ServerAdd />
-		<ServerGrid />
-	</Tabs.Content>
-	<Tabs.Content
-		value="launch"
-		class="space-y-4">
-		<NodeserverAdd />
-		<NodeserverLauncher />
-		<NodeserverGrid />
-	</Tabs.Content>
+<!-- ponytail: no "Launch Server" tab — it spawns a local NodeJS Foundry, which Android cannot do. -->
+<main class="container mx-auto grid max-w-3xl gap-4 px-2 py-3">
+	<ServerAdd />
+	<ServerGrid />
 </main>

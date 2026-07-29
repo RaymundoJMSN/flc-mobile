@@ -3,17 +3,14 @@
 	import { open } from "@tauri-apps/plugin-shell";
 
 	import { Badge } from "$ui/badge/index.js";
-	import * as Tabs from "$lib/components/ui/tabs/index.js";
 	import * as Tooltip from "$lib/components/ui/tooltip/index.js";
 
 	import ToolbarLightSwitch from "$components/ToolbarLightSwitch.svelte";
 	import ToolbarWebGl from "$components/ToolbarWebGL.svelte";
-	import ToolbarControls from "$components/ToolbarControls.svelte";
-	import ToolbarIncognito from "$components/ToolbarIncognito.svelte";
 </script>
 
 <header class="bg-background sticky top-0 z-10 w-full border-b">
-	<div class="container mx-auto flex w-full max-w-3xl items-center justify-between py-2">
+	<div class="container mx-auto flex w-full max-w-3xl items-center justify-between px-2 py-2">
 		<button
 			class="flex items-center space-x-1"
 			onclick={() => open("https://foundry.ruleplaying.com/flc")}>
@@ -32,20 +29,9 @@
 			{/await}
 		</button>
 
-		<Tabs.List>
-			<Tabs.Trigger
-				value="join"
-				class="w-48">Join Server</Tabs.Trigger>
-			<Tabs.Trigger
-				value="launch"
-				class="w-48">Launch Server</Tabs.Trigger>
-		</Tabs.List>
-
 		<div class="flex items-center space-x-2">
 			<Tooltip.Provider>
-				<ToolbarIncognito />
 				<ToolbarLightSwitch />
-				<ToolbarControls />
 				<ToolbarWebGl />
 			</Tooltip.Provider>
 		</div>

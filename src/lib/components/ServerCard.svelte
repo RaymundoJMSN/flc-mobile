@@ -72,10 +72,10 @@
 			title="Delete Server"><XIcon /></Button>
 	</div>
 
-	<div class="bg-accent/50 ring-border mx-2 h-full w-full rounded-md px-4 py-3 ring-1">
+	<div class="bg-accent/50 ring-border mx-2 h-full w-full min-w-0 rounded-md px-3 py-3 ring-1">
 		<div class="my-auto grid gap-1.5">
 			<h1 class="overflow-hidden font-semibold text-nowrap text-ellipsis">{server.label}</h1>
-			<div class="text-muted-foreground flex items-center gap-1 text-xs">
+			<div class="text-muted-foreground flex flex-wrap items-center gap-1 text-xs">
 				{#if status?.partner}
 					<Badge class="bg-lime-800">
 						<ZapIcon />{status.partner}</Badge>
